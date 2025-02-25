@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const db = require("./db");
+const mysql = require("mysql");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -9,64 +9,29 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// 📌 Configurar la conexión con la base de datos
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,      // Servidor de la base de datos
+  user: process.env.DB_USER,      // Usuario de la base de datos
+  password: process.env.DB_PASSWORD,  // Contraseña
+  database: process.env.DB_NAME,  // Nombre de la base de datos
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error("❌ Error en la conexión a MySQL:", err);
+  } else {
+    console.log("✅ Conectado a MySQL correctamente");
+  }
+});
+
+// 📌 Ruta para probar la conexión
+app.get("/", (req, res) => {
+  res.send("Servidor funcionando correctamente");
+});
+
+// Iniciar el servidor
 const PORT = process.env.PORT || 3000;
-
-// **Ruta de login**
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-
-  db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: "Error en el servidor" });
-
-    if (results.length > 0) {
-      const user = results[0];
-      bcrypt.compare(password, user.password_hash, (err, isMatch) => {
-        if (err) return res.status(500).json({ error: "Error al verificar contraseña" });
-
-        if (isMatch) {
-          res.json({ message: "Inicio de sesión exitoso", userId: user.id });
-        } else {
-          res.status(401).json({ error: "Contraseña incorrecta" });
-        }
-      });
-    } else {
-      res.status(404).json({ error: "Usuario no encontrado" });
-    }
-  });
-});
-
-// **Ruta de registro**
-app.post("/register", (req, res) => {
-  const { username, email, password } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-
-  db.query(
-    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-    [username, email, hashedPassword],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: "Error al registrar usuario" });
-
-      res.json({ message: "Usuario registrado con éxito" });
-    }
-  );
-});
-
-// **Ruta de recuperación de contraseña**
-app.post("/forgot-password", (req, res) => {
-  const { email } = req.body;
-
-  db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: "Error en el servidor" });
-
-    if (results.length > 0) {
-      res.json({ message: "Se ha enviado un enlace de recuperación a tu correo." });
-    } else {
-      res.status(404).json({ error: "Correo no encontrado" });
-    }
-  });
-});
-
-// **Iniciar el servidor**
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });

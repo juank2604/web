@@ -6,15 +6,5 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mysql": "^2.18.1"
-  },
-  "name": "pythonmysql",
-  "version": "1.0.0",
-  "main": "index.html",
-  "scripts": {
-    "start": "server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }
